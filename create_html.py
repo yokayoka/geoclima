@@ -253,6 +253,15 @@ def create_html(wi_records, snow_records):
       }}
     );
 
+    const gsiPhoto1970 = L.tileLayer(
+      'https://cyberjapandata.gsi.go.jp/xyz/gazo1/{{z}}/{{x}}/{{y}}.jpg',
+      {{
+        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル（1970年代空中写真）</a>',
+        maxZoom: 17,
+        opacity: 1.0
+      }}
+    );
+
     // デフォルトは Google Hybrid を表示
     googleHybrid.addTo(map);
 
@@ -454,10 +463,11 @@ def create_html(wi_records, snow_records):
     }};
 
     const overlayLayers = {{
-      '暖かさの指数（WI）': wiToggle,
-      '年最深積雪':         snowToggle,
-      '色別標高図（地理院）':  gsiRelief,
-      '陰影起伏図（地理院）':  gsiHillshade
+      '暖かさの指数（WI）':        wiToggle,
+      '年最深積雪':                snowToggle,
+      '色別標高図（地理院）':       gsiRelief,
+      '陰影起伏図（地理院）':       gsiHillshade,
+      '1970年代空中写真（地理院）': gsiPhoto1970
     }};
 
     L.control.layers(baseLayers, overlayLayers, {{ collapsed: false }}).addTo(map);

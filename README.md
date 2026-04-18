@@ -179,16 +179,27 @@ start wi.html
 | 積雪色分け表示 | 年最深積雪を5段階の青系色で描画（レイヤーコントロールで有効化） |
 | クリック | 任意の地点をクリックすると、表示中のレイヤーの値と座標をポップアップ表示 |
 | レイヤー切り替え | Google Hybrid（衛星写真）と地理院地図（標準地図）を選択可能 |
-| オーバーレイ切り替え | WI・積雪の各レイヤーを個別にON/OFF |
+| オーバーレイ切り替え | WI・積雪・標高図・陰影起伏図・1970年代空中写真を個別にON/OFF |
 | WI 凡例 | 画面右下に植生帯区分の凡例を表示 |
 | 積雪凡例 | 画面左下に積雪深の凡例を表示 |
+| URL共有 | 左上の共有ボタンで現在の表示位置・ズームを含むURLをクリップボードにコピー |
 
 ### ベースマップ
 
-| ベースマップ | URL |
-|-------------|-----|
+| レイヤー名 | URL |
+|-----------|-----|
 | Google Hybrid（衛星写真） | `https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}` |
 | 地理院地図（標準地図） | `https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png` |
+
+### オーバーレイ
+
+| レイヤー名 | URL | 備考 |
+|-----------|-----|------|
+| 暖かさの指数（WI） | Canvas レイヤー | デフォルト表示 |
+| 年最深積雪 | Canvas レイヤー | デフォルト非表示 |
+| 色別標高図（地理院） | `https://cyberjapandata.gsi.go.jp/xyz/relief/{z}/{x}/{y}.png` | maxZoom 15 |
+| 陰影起伏図（地理院） | `https://cyberjapandata.gsi.go.jp/xyz/hillshademap/{z}/{x}/{y}.png` | maxZoom 16 |
+| 1970年代空中写真（地理院） | `https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg` | maxZoom 17 |
 
 > **注意**: Googleマップのタイルは利用規約により商用利用が制限される場合がある。
 > 教育・非営利目的での使用を想定している。
