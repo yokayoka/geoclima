@@ -1,0 +1,16 @@
+# 元データ（ZIP）: download.py で再取得可能
+clima/
+
+# 中間ファイル: process.py で再生成可能
+mon_temp.dat
+wi.dat
+snow.dat
+
+# Python キャッシュ
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
