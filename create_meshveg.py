@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-wi.dat / snow.dat / veg/aomori_todomatsu.json から
+wi.dat / snow.dat / veg/*.json から
 Leaflet Web地図（meshveg.html）を生成するスクリプト
 
-wi.html に加えてオオシラビソ（アオモリトドマツ）植生レイヤーを追加。
+wi.html に加えてオオシラビソ・トウヒ・コメツガの植生レイヤーを追加。
 """
 
 import os
 import json
 
-WI_FILE   = os.path.join(os.path.dirname(__file__), 'wi.dat')
-SNOW_FILE = os.path.join(os.path.dirname(__file__), 'snow.dat')
-VEG_FILE  = os.path.join(os.path.dirname(__file__), 'veg', 'aomori_todomatsu.json')
-HTML_FILE = os.path.join(os.path.dirname(__file__), 'meshveg.html')
+WI_FILE       = os.path.join(os.path.dirname(__file__), 'wi.dat')
+SNOW_FILE     = os.path.join(os.path.dirname(__file__), 'snow.dat')
+VEG_AOMORI    = os.path.join(os.path.dirname(__file__), 'veg', 'aomori_todomatsu.json')
+VEG_TOUHI     = os.path.join(os.path.dirname(__file__), 'veg', 'touhi.json')
+VEG_KOMETUGA  = os.path.join(os.path.dirname(__file__), 'veg', 'kometuga.json')
+HTML_FILE     = os.path.join(os.path.dirname(__file__), 'meshveg.html')
 
 CELL_HEIGHT = 1.0 / 120.0
 CELL_WIDTH  = 1.0 / 80.0
@@ -43,23 +45,25 @@ def load_snow_data():
     return records
 
 
-def load_veg_data():
-    with open(VEG_FILE, 'r', encoding='utf-8') as f:
+def load_veg_json(path):
+    with open(path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     return data['meshes']
 
 
-def create_html(wi_records, snow_records, veg_records):
-    wi_json   = json.dumps(wi_records,   separators=(',', ':'), ensure_ascii=False)
-    snow_json = json.dumps(snow_records, separators=(',', ':'), ensure_ascii=False)
-    veg_json  = json.dumps(veg_records,  separators=(',', ':'), ensure_ascii=False)
+def create_html(wi_records, snow_records, aomori_records, touhi_records, kometuga_records):
+    wi_json       = json.dumps(wi_records,       separators=(',', ':'), ensure_ascii=False)
+    snow_json     = json.dumps(snow_records,     separators=(',', ':'), ensure_ascii=False)
+    aomori_json   = json.dumps(aomori_records,   separators=(',', ':'), ensure_ascii=False)
+    touhi_json    = json.dumps(touhi_records,    separators=(',', ':'), ensure_ascii=False)
+    kometuga_json = json.dumps(kometuga_records, separators=(',', ':'), ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>植生WebGIS – オオシラビソ・気候指数</title>
+  <title>植生WebGIS – 亜高山帯針葉樹・気候指数</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -86,6 +90,7 @@ def create_html(wi_records, snow_records, veg_records):
       font-size: 12px; line-height: 1.6;
     }}
     .legend h4 {{ margin: 0 0 6px 0; font-size: 13px; font-weight: bold; }}
+    .legend h5 {{ margin: 6px 0 3px 0; font-size: 12px; font-weight: bold; color: #555; }}
     .legend-item {{ display: flex; align-items: center; margin-bottom: 2px; }}
     .legend-color {{
       width: 16px; height: 16px; margin-right: 7px;
@@ -128,9 +133,11 @@ def create_html(wi_records, snow_records, veg_records):
     // WI/積雪: [緯度, 経度, 値]
     // 植生:    [緯度, 経度, 群落コード, 群落名]
     // =====================================================================
-    const wiData   = {wi_json};
-    const snowData = {snow_json};
-    const vegData  = {veg_json};
+    const wiData       = {wi_json};
+    const snowData     = {snow_json};
+    const aomoriData   = {aomori_json};
+    const touhiData    = {touhi_json};
+    const kometugaData = {kometuga_json};
 
     const CELL_H = {CELL_HEIGHT:.10f};
     const CELL_W = {CELL_WIDTH:.10f};
@@ -175,21 +182,38 @@ def create_html(wi_records, snow_records, veg_records):
       return SNOW_COLORS[4];
     }}
 
-    // 植生: 群落コードごとに色分け
-    const VEG_CODE_COLORS = {{
-      '20501':  '#006400',  // オオシラビソ群集（純群落）
+    // オオシラビソ: 緑系
+    const AOMORI_CODE_COLORS = {{
+      '20501':  '#006400',
       '20501A': '#006400',
-      '20501B': '#228B22',  // アオモリトドマツ群落
-      '20501C': '#2E8B57',  // オオシラビソ-ブナ群落
-      '20502':  '#3CB371',  // シラビソ-オオシラビソ群集
+      '20501B': '#228B22',
+      '20501C': '#2E8B57',
+      '20502':  '#3CB371',
       '20502A': '#3CB371',
-      '21400':  '#8FBC8F',  // オオシラビソ-ダケカンバ
-      '40100D': '#90EE90'   // オオシラビソ-ブナ群落（その他）
+      '21400':  '#8FBC8F',
+      '40100D': '#90EE90'
     }};
-    const VEG_DEFAULT_COLOR = '#228B22';
+    function getAomoriColor(vegcode) {{
+      return AOMORI_CODE_COLORS[vegcode] || '#228B22';
+    }}
 
-    function getVegColor(vegcode) {{
-      return VEG_CODE_COLORS[vegcode] || VEG_DEFAULT_COLOR;
+    // トウヒ: 青系
+    const TOUHI_CODE_COLORS = {{
+      '20500': '#1565c0'
+    }};
+    function getTouhiColor(vegcode) {{
+      return TOUHI_CODE_COLORS[vegcode] || '#1976d2';
+    }}
+
+    // コメツガ: 紫系
+    const KOMETUGA_CODE_COLORS = {{
+      '20503':  '#7b1fa2',
+      '20503A': '#7b1fa2',
+      '43300':  '#ab47bc',
+      '43300B': '#ce93d8'
+    }};
+    function getKometugaColor(vegcode) {{
+      return KOMETUGA_CODE_COLORS[vegcode] || '#9c27b0';
     }}
 
     // =====================================================================
@@ -359,18 +383,18 @@ def create_html(wi_records, snow_records, veg_records):
     snowLayer.addTo(map);
     snowLayer.setVisible(false);
 
-    const vegLayer = new MeshCanvasLayer(vegData, getVegColor);
-    vegLayer.addTo(map);
-    vegLayer.setVisible(false);  // デフォルト非表示
+    const aomoriLayer   = new MeshCanvasLayer(aomoriData,   getAomoriColor);
+    const touhiLayer    = new MeshCanvasLayer(touhiData,    getTouhiColor);
+    const kometugaLayer = new MeshCanvasLayer(kometugaData, getKometugaColor);
+    aomoriLayer.addTo(map);   aomoriLayer.setVisible(false);
+    touhiLayer.addTo(map);    touhiLayer.setVisible(false);
+    kometugaLayer.addTo(map); kometugaLayer.setVisible(false);
 
-    const wiToggle   = new ToggleLayer(wiLayer);
-    wiToggle.addTo(map);
-
-    const snowToggle = new ToggleLayer(snowLayer);
-    // addTo しない → 非表示
-
-    const vegToggle  = new ToggleLayer(vegLayer);
-    // addTo しない → 非表示
+    const wiToggle       = new ToggleLayer(wiLayer);       wiToggle.addTo(map);
+    const snowToggle     = new ToggleLayer(snowLayer);
+    const aomoriToggle   = new ToggleLayer(aomoriLayer);
+    const touhiToggle    = new ToggleLayer(touhiLayer);
+    const kometugaToggle = new ToggleLayer(kometugaLayer);
 
     // =====================================================================
     // クリックイベント
@@ -395,11 +419,18 @@ def create_html(wi_records, snow_records, veg_records):
         }}
       }}
 
-      if (vegLayer.isVisible()) {{
-        const h = vegLayer.hitTest(e.latlng);
-        if (h) {{
-          if (!coordHit) coordHit = h;
-          parts.push('<b>植生（第3次メッシュ）</b><br>群落名: <b>' + h[3] + '</b><br>群落コード: ' + h[2]);
+      const vegLayers = [
+        [aomoriLayer,   'オオシラビソ'],
+        [touhiLayer,    'トウヒ'],
+        [kometugaLayer, 'コメツガ']
+      ];
+      for (const [layer, label] of vegLayers) {{
+        if (layer.isVisible()) {{
+          const h = layer.hitTest(e.latlng);
+          if (h) {{
+            if (!coordHit) coordHit = h;
+            parts.push('<b>植生（' + label + '）</b><br>群落名: <b>' + h[3] + '</b><br>群落コード: ' + h[2]);
+          }}
         }}
       }}
 
@@ -423,7 +454,9 @@ def create_html(wi_records, snow_records, veg_records):
     }};
 
     const overlayLayers = {{
-      'オオシラビソ（アオモリトドマツ）':      vegToggle,
+      'オオシラビソ（アオモリトドマツ）':      aomoriToggle,
+      'トウヒ（シラビソ−トウヒ群団）':        touhiToggle,
+      'コメツガ':                             kometugaToggle,
       '暖かさの指数（WI）':                   wiToggle,
       '年最深積雪':                           snowToggle,
       '色別標高図（地理院・50%）':            gsiRelief,
@@ -440,13 +473,20 @@ def create_html(wi_records, snow_records, veg_records):
     vegLegend.onAdd = function() {{
       const div = L.DomUtil.create('div', 'legend');
       div.innerHTML =
-        '<h4>オオシラビソ（アオモリトドマツ）</h4>' +
+        '<h4>亜高山帯針葉樹</h4>' +
+        '<h5>オオシラビソ（アオモリトドマツ）</h5>' +
         '<div class="legend-item"><div class="legend-color" style="background:#006400;"></div><span>オオシラビソ群集</span></div>' +
         '<div class="legend-item"><div class="legend-color" style="background:#228B22;"></div><span>アオモリトドマツ群落</span></div>' +
         '<div class="legend-item"><div class="legend-color" style="background:#2E8B57;"></div><span>オオシラビソ-ブナ群落</span></div>' +
         '<div class="legend-item"><div class="legend-color" style="background:#3CB371;"></div><span>シラビソ-オオシラビソ群集</span></div>' +
         '<div class="legend-item"><div class="legend-color" style="background:#8FBC8F;"></div><span>オオシラビソ-ダケカンバ</span></div>' +
         '<div class="legend-item"><div class="legend-color" style="background:#90EE90;"></div><span>その他のオオシラビソ群落</span></div>' +
+        '<h5>トウヒ（シラビソ−トウヒ群団）</h5>' +
+        '<div class="legend-item"><div class="legend-color" style="background:#1565c0;"></div><span>シラビソ−トウヒ群団</span></div>' +
+        '<h5>コメツガ</h5>' +
+        '<div class="legend-item"><div class="legend-color" style="background:#7b1fa2;"></div><span>コメツガ群落</span></div>' +
+        '<div class="legend-item"><div class="legend-color" style="background:#ab47bc;"></div><span>ウラジロモミ−コメツガ群落</span></div>' +
+        '<div class="legend-item"><div class="legend-color" style="background:#ce93d8;"></div><span>ウラジロモミ−コメツガ・ハリモミ群落</span></div>' +
         '<hr style="margin:5px 0;"><small>出典: 環境省 植生調査<br>（第3次メッシュ植生データ）<br>表示範囲: wi.dat の範囲に限定</small>';
       return div;
     }};
@@ -477,8 +517,8 @@ def create_html(wi_records, snow_records, veg_records):
       div.innerHTML =
         '<h4>植生 WebGIS</h4>' +
         '<p style="margin:0;">' +
-        '<b>オオシラビソ（アオモリトドマツ）</b>:<br>' +
-        '亜高山帯に分布するモミ属針葉樹。<br>' +
+        '<b>オオシラビソ</b>・<b>トウヒ</b>・<b>コメツガ</b>:<br>' +
+        '亜高山帯に分布する針葉樹。<br>' +
         '第3次メッシュ植生データより抽出。<br>' +
         '<b>暖かさの指数（WI）</b>: 月平均気温が<br>' +
         '5°Cを超える月の (月平均気温 − 5°C) の総和。<br>' +
@@ -567,11 +607,19 @@ def main():
     print(f"  {len(snow_records)} 件の積雪データ（0 cm 除く）")
 
     print("aomori_todomatsu.json を読み込み中...")
-    veg_records = load_veg_data()
-    print(f"  {len(veg_records)} 件のオオシラビソメッシュ")
+    aomori_records = load_veg_json(VEG_AOMORI)
+    print(f"  {len(aomori_records)} 件のオオシラビソメッシュ")
+
+    print("touhi.json を読み込み中...")
+    touhi_records = load_veg_json(VEG_TOUHI)
+    print(f"  {len(touhi_records)} 件のトウヒメッシュ")
+
+    print("kometuga.json を読み込み中...")
+    kometuga_records = load_veg_json(VEG_KOMETUGA)
+    print(f"  {len(kometuga_records)} 件のコメツガメッシュ")
 
     print("meshveg.html を生成中...")
-    html = create_html(wi_records, snow_records, veg_records)
+    html = create_html(wi_records, snow_records, aomori_records, touhi_records, kometuga_records)
 
     with open(HTML_FILE, 'w', encoding='utf-8') as f:
         f.write(html)
