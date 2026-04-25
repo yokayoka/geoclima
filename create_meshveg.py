@@ -392,7 +392,7 @@ def create_html(wi_records, snow_records, veg_data):
     ).addTo(map);
 
     // ── 植生凡例（右下）──────────────────────────────────────────
-    const vegLegend = L.control({{position:'bottomright'}});
+    const vegLegend = L.control({{position:'bottomleft'}});
     vegLegend.onAdd = function() {{
       const div=L.DomUtil.create('div','legend');
       div.innerHTML=
