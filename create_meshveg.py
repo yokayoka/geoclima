@@ -58,8 +58,8 @@ INUBUNA_COLORS = {
     '40203C': '#6B8E23', '40203D': '#6B8E23',
 }
 HAIMATSU_COLORS = {
-    '10101B': '#E67E22', '10101C': '#E67E22',  # 高山帯
-    '20800B': '#F39C12',                        # 亜高山帯ダケカンバ-ハイマツ
+    '10101B': '#000000', '10101C': '#000000',
+    '20800B': '#000000',
 }
 MIYAMANA_COLORS = {
     '21300': '#C0392B', '21300A': '#C0392B', '21300B': '#C0392B',
@@ -405,8 +405,8 @@ def create_html(wi_records, snow_records, veg_data):
         '<div class="legend-item"><div class="legend-color" style="background:#7b1fa2;"></div><span>コメツガ群落</span></div>'+
         '<div class="legend-item"><div class="legend-color" style="background:#ab47bc;"></div><span>ウラジロモミ−コメツガ群落</span></div>'+
         '<h5>高山帯・低木帯</h5>'+
-        '<div class="legend-item"><div class="legend-color" style="background:#E67E22;"></div><span>ハイマツ（高山帯）</span></div>'+
-        '<div class="legend-item"><div class="legend-color" style="background:#F39C12;"></div><span>ダケカンバ−ハイマツ群落</span></div>'+
+        '<div class="legend-item"><div class="legend-color" style="background:#000000;"></div><span>ハイマツ（コケモモ−ハイマツ群集）</span></div>'+
+        '<div class="legend-item"><div class="legend-color" style="background:#000000;"></div><span>ダケカンバ−ハイマツ群落</span></div>'+
         '<div class="legend-item"><div class="legend-color" style="background:#C0392B;"></div><span>ミヤマナラ群落</span></div>'+
         '<div class="legend-item"><div class="legend-color" style="background:#E74C3C;"></div><span>ナナカマド−ミネカエデ群落</span></div>'+
         '<h5>山地帯落葉広葉樹</h5>'+
